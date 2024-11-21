@@ -6,9 +6,11 @@
   </picture>
 </p>
 
+> This project is in ALPHA, so not all features are implemented, and breaking changes will occur! Documentation will follow in the BETA stage (maybe...)
+
 ## Vision Toolkit
 
-The Vision Toolkit, developed by the AU / UK Vision team, is a graph flow-based editor that streamlines vision code development. Users can dynamically update code by dragging and connecting nodes, seeing changes in real time. Integrated with TwinCAT Native, it offers an intuitive, efficient toolset for rapid development and visualization, suitable for all skill levels.
+The Vision Toolkit is a graph flow-based editor that streamlines vision code development. Users can dynamically update code by dragging and connecting nodes, seeing changes in real time. Integrated with TwinCAT Native, it offers an intuitive, efficient toolset for rapid development and visualization, suitable for all skill levels.
 
 The vision toolkit is a project in two parts. The TwinCAT project is referred to as the backend, and the TwinCAT HMI project, known as the frontend.
 
