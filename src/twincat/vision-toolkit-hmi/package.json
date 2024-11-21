@@ -1,0 +1,10 @@
+{
+  "name": "vision-toolkit-hmi",
+  "description": "used to collect the required node_modules",
+  "dependencies": {
+    "mobject-graph-ui": "^0.1.21",
+    "mobject-graph-ui-iec-datatypes-pack": "^0.1.2",
+    "mobject-graph-ui-vision-pack": "^0.1.4",
+    "mobject-litegraph": "^0.1.8"
+  }
+}

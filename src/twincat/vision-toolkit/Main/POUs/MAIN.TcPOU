@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="MAIN" Id="{5fb12259-b215-4e01-9f13-2f935b9560b9}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR		
+
+	// installation of the packs is only requried once. 
+	initialise: BOOL;
+	
+	// graph packs
+	iecDatatypesPack : IecDatatypesPack; // mobject-graph, 
+	plcPack : PlcPack; // mobject-graph-plc-pack
+	visionPack : VisionPack; // mobject-graph-vision-pack
+	
+	// custom node
+	myCustomNode : MyCustomNode;
+	
+	// twincat hmi linked variables and nodes
+	displayImage1 : ITcVnDisplayableImage;
+	displayImage1Node : DisplayableImageNode(displayImage1);
+	displayImage2 : ITcVnDisplayableImage;
+	displayImage2Node : DisplayableImageNode(displayImage2);
+	displayImage3 : ITcVnDisplayableImage;
+	displayImage3Node : DisplayableImageNode(displayImage3);
+
+	// application
+	graphFramework : GraphFramework;
+	server : RpcServer;
+	graphFrameworkApi : GraphFrameworkApi(graphFramework);	
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT initialise THEN
+
+	// add graph packs here...
+	graphFramework.Install(iecDatatypesPack); // adds primitives such as BOOL, WORD, STRING...
+	graphFramework.Install(plcPack); // adds datatypes and nodes base on TC2_Utilities...
+	graphFramework.Install(visionPack); // adds datatypes and nodes for TC3_Vision...
+	
+	// add any custom datatypes here...
+	// graphFramework.Datatypes.RegisterDatatype(_customDatatype);
+	
+	// add any custom nodes here...
+	graphFramework.NodeFactory.AddNodeAsPrototype('Custom/MyCustomNode', myCustomNode);
+	
+	// add hardware nodes in the same way...
+	graphFramework.NodeFactory.AddNodeAsPrototype('Displayable Images/Display Image 1', displayImage1Node);
+	graphFramework.NodeFactory.AddNodeAsPrototype('Displayable Images/Display Image 2', displayImage2Node);
+	graphFramework.NodeFactory.AddNodeAsPrototype('Displayable Images/Display Image 3', displayImage3Node);
+	
+	graphFramework.NodeFactory.AddNodeAsPrototype('Cameras/Camera1', displayImage3Node);
+	
+	// add the graph framework api to the server, this will register all of the endpoint handlers
+	server.RegisterApi(graphFrameworkApi);
+
+	// done
+	initialise := TRUE;	
+
+END_IF
+
+// a special feature of .RegisterApi is that the server will know to cyclic call all registered apis each cycle. 
+server.CyclicCall();]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

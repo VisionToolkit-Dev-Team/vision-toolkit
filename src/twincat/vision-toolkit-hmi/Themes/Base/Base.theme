@@ -1,0 +1,28 @@
+{
+  "controlTypeValues": {},
+  "controlClassValues": {
+    "side-hide": {
+      "attributes": {
+        "Transform": [
+          {
+            "transformType": "Translate",
+            "x": 230.0
+          }
+        ]
+      },
+      "themedResources": {}
+    },
+    "side-show": {
+      "attributes": {
+        "Transform": [
+          {
+            "transformType": "Translate",
+            "x": 0.0
+          }
+        ]
+      },
+      "themedResources": {}
+    }
+  },
+  "$schema": "./../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.762.44/runtimes/native1.12-tchmi/Schema/ThemeDescription.Schema.json"
+}

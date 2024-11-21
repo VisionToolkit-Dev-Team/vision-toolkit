@@ -1,0 +1,30 @@
+{
+  "name": "vision-toolkit",
+  "version": "0.1.0",
+  "description": "A TwinCAT Project showing how to use mobject-graph",
+  "scripts": {
+    "update-dependencies": "ncu -u && npm install",
+    "copy-files": "node ./devtools/copy-files.js",
+    "update": "npm run update-dependencies && npm run copy-files"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VisionToolkit-Dev-Team/vision-toolkit"
+  },
+  "keywords": [
+    "mobject-graph",
+    "mobject"
+  ],
+  "author": "benhar-dev",
+  "license": "MIT",
+  "dependencies": {
+    "mobject-client": "^2.0.0",
+    "mobject-graph-ui": "^0.1.22",
+    "mobject-graph-ui-iec-datatypes-pack": "^0.1.3",
+    "mobject-graph-ui-vision-pack": "^0.1.5",
+    "mobject-litegraph": "^0.1.9"
+  },
+  "devDependencies": {
+    "npm-check-updates": "^17.1.11"
+  }
+}

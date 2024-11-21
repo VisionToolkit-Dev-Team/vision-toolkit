@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="DisplayableImageNode" Id="{f6bbd19e-bbc7-4909-b7c1-d0bb207a7e35}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'linkalways'} 
+{attribute 'no_explicit_call' := 'This FB is a CLASS and must be accessed using methods or properties'}
+{attribute 'enable_dynamic_creation'}
+// this node shows you how it is possible to make "hardware nodes", i.e. nodes which are connected to variables which are static.  this
+// can be variables linked with the hmi, or could even be i/o pdo
+FUNCTION_BLOCK DisplayableImageNode EXTENDS Node
+VAR
+	ipSrcImage : _ITcVnImage;
+	hrPrev : _HRESULT(S_OK);
+	ipDestImage : REFERENCE TO ITcVnDisplayableImage;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="Constructor" Id="{44151ad8-50f1-4f20-92b5-6bfee2b3527b}" />
+    <Method Name="Clone" Id="{e729e78a-5de9-49ec-831c-fea8e2df46fe}">
+      <Declaration><![CDATA[METHOD PUBLIC  Clone : I_Node
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// this node is classed as a hardware node, i.e. there is only one as it is linked to a variable, or I/O point. 
+// therefore, when someone tries to clone it, instead of getting a new one, they get the same one. 
+Clone := THIS^;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Dispose" Id="{03fa35e9-a768-4af1-a0cf-be85e00bd2af}">
+      <Declaration><![CDATA[METHOD PUBLIC Dispose
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// you will also add a blank dispose method to prevent the system from automatically destroying the node.  
+// hardware nodes are here to stay as they are linked with things in the PLC.  ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_init" Id="{e1ef5dcb-119f-417b-9081-64e53d585b93}" FolderPath="Constructor\">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+	bInitRetains : BOOL; // if TRUE, the retain variables are initialized (warm start / cold start)
+	bInCopyCode : BOOL;  // if TRUE, the instance afterwards gets moved into the copy code (online change)
+	DisplayableImage : REFERENCE TO ITcVnDisplayableImage;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[ipDestImage REF= DisplayableImage;
+AddInput('in', ipSrcImage);]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnExecute" Id="{b29d9fec-e328-42c8-8145-f42f6318a112}">
+      <Declaration><![CDATA[METHOD PROTECTED  OnExecute : HRESULT
+VAR
+	result : HRESULT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[result := F_VN_CopyIntoDisplayableImage(ipSrcImage.Value, ipDestImage, hrPrev.Value);
+
+IF succeeded(result) THEN
+	// if everything was a success, then leave, the job is done.
+	RETURN;
+END_IF
+
+// we know that the function failed so we may need to do some tidying
+
+IF ipDestImage = 0 THEN
+	// we didn't have a displayable image already, so that's fine.  Nothing to tidy.  Time to leave. 
+	RETURN;
+END_IF
+
+// we know we have an image, so best is to release it and set the destination to 0. 
+
+ipDestImage.TcRelease();
+ipDestImage := 0;]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

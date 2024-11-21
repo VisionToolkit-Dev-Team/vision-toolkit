@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <FileVersion>1.0.0.0</FileVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{f1576147-dc09-44d7-84a8-74275c1a581b}</ProjectGuid>
+    <SubObjectsSortedByName>True</SubObjectsSortedByName>
+    <DownloadApplicationInfo>true</DownloadApplicationInfo>
+    <WriteProductVersion>true</WriteProductVersion>
+    <GenerateTpy>false</GenerateTpy>
+    <Name>Main</Name>
+    <ProgramVersion>3.1.4024.0</ProgramVersion>
+    <Application>{02f769d1-0fa7-4777-9bd6-f225cf2dda9d}</Application>
+    <TypeSystem>{c7b8f2db-2819-4245-b84d-dcbfd0ae08b5}</TypeSystem>
+    <Implicit_Task_Info>{1c0fe657-42b0-4d07-a62a-50fc138c7026}</Implicit_Task_Info>
+    <Implicit_KindOfTask>{361b9398-4e8e-4cf7-9527-01504e70e02a}</Implicit_KindOfTask>
+    <Implicit_Jitter_Distribution>{8899dc31-547b-4210-ac98-e09c4592c027}</Implicit_Jitter_Distribution>
+    <LibraryReferences>{c196745c-6e75-4955-984e-cdf721991334}</LibraryReferences>
+    <Released>false</Released>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="PlcTask.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Examples\MyCustomNode.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Examples\DisplayableImageNode.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\MAIN.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="POUs" />
+    <Folder Include="POUs\Examples" />
+  </ItemGroup>
+  <ItemGroup>
+    <PlaceholderReference Include="mobject-core">
+      <DefaultResolution>mobject-core, * (mobject)</DefaultResolution>
+      <Namespace>mobject_core</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="mobject-graph">
+      <DefaultResolution>mobject-graph, * (mobject)</DefaultResolution>
+      <Namespace>mobject_graph</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="mobject-graph-plc-pack">
+      <DefaultResolution>mobject-graph-plc-pack, * (mobject)</DefaultResolution>
+      <Namespace>mobject_graph_plc_pack</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="mobject-graph-vision-pack">
+      <DefaultResolution>mobject-graph-vision-pack, * (mobject)</DefaultResolution>
+      <Namespace>mobject_graph_vision_pack</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="mobject-server">
+      <DefaultResolution>mobject-server, * (mobject)</DefaultResolution>
+      <Namespace>mobject_server</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Standard">
+      <DefaultResolution>Tc2_Standard, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Standard</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_System">
+      <DefaultResolution>Tc2_System, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_System</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Utilities">
+      <DefaultResolution>Tc2_Utilities, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Utilities</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_Module">
+      <DefaultResolution>Tc3_Module, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_Module</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_Vision">
+      <DefaultResolution>Tc3_Vision, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_Vision</Namespace>
+    </PlaceholderReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Main.tmc">
+      <SubType>Content</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PlaceholderResolution Include="mobject-server">
+      <Resolution>mobject-server, * (mobject)</Resolution>
+    </PlaceholderResolution>
+  </ItemGroup>
+  <ProjectExtensions>
+    <PlcProjectOptions>
+      <XmlArchive>
+        <Data>
+          <o xml:space="preserve" t="OptionKey">
+      <v n="Name">"&lt;ProjectRoot&gt;"</v>
+      <d n="SubKeys" t="Hashtable" />
+      <d n="Values" t="Hashtable" />
+    </o>
+        </Data>
+        <TypeList>
+          <Type n="Hashtable">System.Collections.Hashtable</Type>
+          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+          <Type n="String">System.String</Type>
+        </TypeList>
+      </XmlArchive>
+    </PlcProjectOptions>
+  </ProjectExtensions>
+</Project>

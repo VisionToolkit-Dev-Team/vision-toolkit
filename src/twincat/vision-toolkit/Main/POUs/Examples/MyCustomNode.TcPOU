@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MyCustomNode" Id="{358dd3b7-a56e-479e-bdde-21d19fc6e790}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'linkalways'} 
+{attribute 'no_explicit_call' := 'This FB is a CLASS and must be accessed using methods or properties'}
+{attribute 'enable_dynamic_creation'}
+FUNCTION_BLOCK MyCustomNode EXTENDS Node
+VAR
+	myIntParameter : _INT(123);
+	myWordParameter : _WORD(456);
+	myIntOutput : _INT(0);
+	myWordOutput : _WORD(0);
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="Constructor" Id="{b9b54ef3-500f-4878-b558-801e60473a1a}" />
+    <Method Name="Clone" Id="{a6512861-d426-49a6-a9b7-1ce72b8c66ba}">
+      <Declaration><![CDATA[METHOD PUBLIC  Clone : I_Node
+VAR_INPUT
+END_VAR
+VAR
+	pNode : POINTER TO MyCustomNode;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[pNode := __NEW(MyCustomNode);
+Clone := pNode^;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_init" Id="{29aa68c9-b3b2-4cd2-9a60-b6597cfa433b}" FolderPath="Constructor\">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+	bInitRetains : BOOL; // if TRUE, the retain variables are initialized (warm start / cold start)
+	bInCopyCode : BOOL;  // if TRUE, the instance afterwards gets moved into the copy code (online change)
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[AddParameter('myIntParam', myIntParameter);
+AddParameter('myWordParam', myWordParameter);
+AddOutput('myIntOutput', myIntOutput);
+AddOutput('myWordOutput', myWordOutput);]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnExecute" Id="{9153dc58-7709-4bc4-bd33-a71bf7dd566d}">
+      <Declaration><![CDATA[METHOD PROTECTED  OnExecute : HRESULT]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[myIntOutput.Value := myIntParameter.Value;
+myWordOutput.Value := myWordParameter.Value;]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>
