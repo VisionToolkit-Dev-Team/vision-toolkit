@@ -48,8 +48,6 @@ END_VAR]]></Declaration>
 	graphFramework.NodeFactory.AddNodeAsPrototype('Displayable Images/Display Image 2', displayImage2Node);
 	graphFramework.NodeFactory.AddNodeAsPrototype('Displayable Images/Display Image 3', displayImage3Node);
 	
-	graphFramework.NodeFactory.AddNodeAsPrototype('Cameras/Camera1', displayImage3Node);
-	
 	// add the graph framework api to the server, this will register all of the endpoint handlers
 	server.RegisterApi(graphFrameworkApi);
 

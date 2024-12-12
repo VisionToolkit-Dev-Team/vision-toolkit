@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="MyCustomNode" Id="{358dd3b7-a56e-479e-bdde-21d19fc6e790}" SpecialFunc="None">
     <Declaration><![CDATA[{attribute 'linkalways'} 
 {attribute 'no_explicit_call' := 'This FB is a CLASS and must be accessed using methods or properties'}
@@ -43,7 +43,7 @@ AddOutput('myWordOutput', myWordOutput);]]></ST>
       </Implementation>
     </Method>
     <Method Name="OnExecute" Id="{9153dc58-7709-4bc4-bd33-a71bf7dd566d}">
-      <Declaration><![CDATA[METHOD PROTECTED  OnExecute : HRESULT]]></Declaration>
+      <Declaration><![CDATA[METHOD PROTECTED  OnExecute]]></Declaration>
       <Implementation>
         <ST><![CDATA[myIntOutput.Value := myIntParameter.Value;
 myWordOutput.Value := myWordParameter.Value;]]></ST>
