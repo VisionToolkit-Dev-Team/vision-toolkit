@@ -1,6 +1,6 @@
 class ApiConnection{      
     constructor(symbol = '%s%PLC1.MAIN.server.HandleRequest%/s%'){
-        this.client = new TcHmiRpcClient(symbol);
+        this.client = new TcHmiRpcClient(symbol, { stackSize: 4096000 });
     }
     async send(methodName, params) {
         try {

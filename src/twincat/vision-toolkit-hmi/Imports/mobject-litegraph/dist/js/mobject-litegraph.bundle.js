@@ -4943,6 +4943,9 @@
                 if (node.inputs) {
                     for (let i = 0; i < node.inputs.length; i++) {
                         let slot = node.inputs[i];
+
+                        if (slot.widget_name) continue; // if it is a widget input, then don't draw it here.
+
                         let slot_type = slot.type;
                         let slot_shape = slot.shape;
 
@@ -5165,6 +5168,7 @@
                             ? this.node_widget[1]
                             : null,
                     );
+                    max_y = this.drawNodeWidgetInputs(node, ctx, max_y);
                 }
             } else if (this.render_collapsed_slots) {
                 // if collapsed
@@ -5251,6 +5255,119 @@
 
             ctx.globalAlpha = 1.0;
         }
+
+        drawNodeWidgetInputs(node, ctx, max_y) {
+
+            var editor_alpha = this.editor_alpha;
+            var out_slot = this.connecting_output;
+            var low_quality = this.ds.scale < 0.6; // zoomed out
+            var render_text = !this.lowQualityRenderingRequired(0.6);
+            var horizontal = node.horizontal;
+            var slot_pos = new Float32Array(2);
+
+            if (node.inputs) {
+                for (let i = 0; i < node.inputs.length; i++) {
+                    let slot = node.inputs[i];
+
+                    if (!slot.widget_name) continue; // if it is not a widget input, then don't draw it here.
+
+                    let slot_type = slot.type;
+                    let slot_shape = slot.shape;
+
+                    ctx.globalAlpha = editor_alpha;
+                    // change opacity of incompatible slots when dragging a connection
+                    if ( this.connecting_output && !LiteGraph.isValidConnection( slot.type , out_slot.type) ) {
+                        ctx.globalAlpha = 0.4 * editor_alpha;
+                    }
+
+                    ctx.fillStyle =
+                        slot.link != null
+                            ? slot.color_on ||
+                                this.default_connection_color_byType[slot_type] ||
+                                this.default_connection_color.input_on
+                            : slot.color_off ||
+                                this.default_connection_color_byTypeOff[slot_type] ||
+                                this.default_connection_color_byType[slot_type] ||
+                                this.default_connection_color.input_off;
+
+                    let pos = node.getConnectionPos(true, i, slot_pos);
+                    pos[0] -= node.pos[0];
+                    pos[1] -= node.pos[1];
+                    if (max_y < pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5) {
+                        max_y = pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5;
+                    }
+
+                    ctx.beginPath();
+
+                    if (slot_type == "array") {
+                        slot_shape = LiteGraph.GRID_SHAPE; // place in addInput? addOutput instead?
+                    } else if (slot.name == "onTrigger" || slot.name == "onExecuted") {
+                        slot_shape = LiteGraph.ARROW_SHAPE;
+                    } else if(slot_type === LiteGraph.EVENT || slot_type === LiteGraph.ACTION) {
+                        slot_shape = LiteGraph.BOX_SHAPE;
+                    }
+
+                    if (slot_shape === LiteGraph.BOX_SHAPE) {
+                        if (horizontal) {
+                            ctx.rect(
+                                pos[0] - 5 + 0.5,
+                                pos[1] - 8 + 0.5,
+                                10,
+                                14,
+                            );
+                        } else {
+                            ctx.rect(
+                                pos[0] - 6 + 0.5,
+                                pos[1] - 5 + 0.5,
+                                14,
+                                10,
+                            );
+                        }
+                    } else if (slot_shape === LiteGraph.ARROW_SHAPE) {
+                        ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
+                        ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
+                        ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
+                        ctx.closePath();
+                    } else if (slot_shape === LiteGraph.GRID_SHAPE) {
+                        ctx.rect(pos[0] - 4, pos[1] - 4, 2, 2);
+                        ctx.rect(pos[0] - 1, pos[1] - 4, 2, 2);
+                        ctx.rect(pos[0] + 2, pos[1] - 4, 2, 2);
+                        ctx.rect(pos[0] - 4, pos[1] - 1, 2, 2);
+                        ctx.rect(pos[0] - 1, pos[1] - 1, 2, 2);
+                        ctx.rect(pos[0] + 2, pos[1] - 1, 2, 2);
+                        ctx.rect(pos[0] - 4, pos[1] + 2, 2, 2);
+                        ctx.rect(pos[0] - 1, pos[1] + 2, 2, 2);
+                        ctx.rect(pos[0] + 2, pos[1] + 2, 2, 2);
+                    } else {
+                        if(low_quality)
+                            ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8 ); // faster
+                        else
+                            ctx.arc(pos[0], pos[1], 4, 0, Math.PI * 2);
+                    }
+                    ctx.fill();
+
+                    if (slot.link) {
+                    // render name
+                    if (render_text
+                        && !(slot.name == "onTrigger" || slot.name == "onExecuted")
+                    ) {
+                        let text = slot.label != null ? slot.label : slot.name;
+                        if (text) {
+                            ctx.fillStyle = LiteGraph.NODE_TEXT_COLOR;
+                            if (horizontal || slot.dir == LiteGraph.UP) {
+                                ctx.fillText(text, pos[0], pos[1] - 10);
+                            } else {
+                                ctx.fillText(text, pos[0] + 10, pos[1] + 5);
+                            }
+                        }
+                    }
+                }
+                }
+            }
+
+            return max_y;
+        }
+
 
         drawNodeTooltip( ctx, node ) {
             if(!node || !ctx) {
@@ -6394,9 +6511,10 @@
                         }
                         break;
                     default:
-                        if (w.draw) {
+                        if (w.draw && (!w.port_name || (w.port_name && !node.inputs.find(i => i.name === w.port_name).link))) {
                             w.draw(ctx, node, widget_width, y, H);
                         }
+
                         break;
                 }
                 posY += (w.computeSize ? w.computeSize(widget_width)[1] : H) + 4;
@@ -13801,14 +13919,20 @@
             return size;
         }
 
-        getSlotsHeight(){
-            // minimum height calculated by slots or 1
+        getSlotsHeight() {
+            // Filter inputs to exclude those with a widget_name
+            const validInputsCount = this.inputs 
+                ? this.inputs.filter(input => !input.widget_name).length 
+                : 0;
+        
+            // Calculate minimum height using valid inputs
             const rowHeight = Math.max(
-                this.inputs ? this.inputs.length : 1,
+                validInputsCount,
                 this.outputs ? this.outputs.length : 1,
-                1,
+                1
             ) * LiteGraph.NODE_SLOT_HEIGHT + 10;
-            // add margin (should this be always?)
+        
+            // Add margin (should this be always?)
             return rowHeight + (this.constructor.slot_start_y || 0);
         }
 
@@ -14891,10 +15015,50 @@
             } else {
                 out[0] = this.pos[0] + this.size[0] + 1 - offset;
             }
+
+            if (
+                is_input &&
+                this.inputs &&
+                this.inputs[slot_number] &&
+                this.inputs[slot_number].widget_name
+              ) {
+                
+                let widget_name = this.inputs[slot_number].widget_name;
+                let widget = this.widgets.find(widget => widget.name === widget_name);
+
+                out[1] = this.pos[1] + widget.last_y + widget.computeSize()[1] / 2;
+                return out;
+              }
+
+
+            if (is_input) {
+                var actual_slot_pos = slot_number;
+          
+                for (var i = slot_number - 1; i > 0; i--) {
+                  if (
+                    is_input &&
+                    this.inputs &&
+                    this.inputs[i] &&
+                    this.inputs[slot_number].widget_name
+                  ) {
+                    actual_slot_pos--;
+                  }
+                }
+
             out[1] =
                 this.pos[1] +
-                (slot_number + 0.7) * LiteGraph.NODE_SLOT_HEIGHT +
+                (actual_slot_pos + 0.7) * LiteGraph.NODE_SLOT_HEIGHT +
                 (this.constructor.slot_start_y || 0);
+            } else {
+                out[1] =
+                  this.pos[1] +
+                  (slot_number + 0.7) * LiteGraph.NODE_SLOT_HEIGHT +
+                  (this.constructor.slot_start_y || 0);
+              }
+
+
+
+
             return out;
         }
 

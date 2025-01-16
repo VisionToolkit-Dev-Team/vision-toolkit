@@ -1302,9 +1302,7 @@
 	</DataTypes>
 	<Project ProjectGUID="{6BEA6A24-23F0-4238-BD19-17922AEF26CD}" Target64Bit="true" ShowHideConfigurations="#x3c7">
 		<System>
-			<Settings MaxCpus="4" NonWinCpus="1" RouterMemory="1073741824">
-				<Cpu CpuId="3"/>
-			</Settings>
+			<Settings MaxCpus="20" NonWinCpus="1" RouterMemory="1073741824" MaxStackSize="4096"/>
 			<Tasks>
 				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" DisableFpExceptions="true" WatchdogStackCapacity="10" AdtTasks="true">
 					<Name>PlcTask</Name>

@@ -28,6 +28,45 @@
     "DEFAULTTIMEZONE": "client",
     "DEFAULTUSERGROUP": "__SystemUsers",
     "DEFINITIONS": {
+        "PLC1.METHOD-RETURNING-mobject_server.ResponseData-PARAMETERS-SerializedHeader-STRING-1024--SerializedPayload-STRING-512000": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/PLC1.mobject_server.ResponseData"
+                },
+                {
+                    "function": true,
+                    "writeValue": {
+                        "properties": {
+                            "SerializedHeader": {
+                                "allOf": [
+                                    {
+                                        "maxLength": 1024
+                                    },
+                                    {
+                                        "$ref": "tchmi:general#/definitions/String"
+                                    }
+                                ]
+                            },
+                            "SerializedPayload": {
+                                "allOf": [
+                                    {
+                                        "maxLength": 512000
+                                    },
+                                    {
+                                        "$ref": "tchmi:general#/definitions/String"
+                                    }
+                                ]
+                            }
+                        },
+                        "required": [
+                            "SerializedHeader",
+                            "SerializedPayload"
+                        ],
+                        "type": "object"
+                    }
+                }
+            ]
+        },
         "PLC1.METHOD-RETURNING-mobject_server.ResponseData-PARAMETERS-SerializedHeader-STRING-1024--SerializedPayload-STRING-8000": {
             "allOf": [
                 {
@@ -83,7 +122,7 @@
                 "Payload": {
                     "allOf": [
                         {
-                            "maxLength": 8000,
+                            "maxLength": 512000,
                             "propertyOrder": 2
                         },
                         {
@@ -2618,7 +2657,7 @@
             "DYNAMIC": true,
             "MAPPING": "PLC1::MAIN::server::HandleRequest",
             "SCHEMA": {
-                "$ref": "tchmi:server#/definitions/PLC1.METHOD-RETURNING-mobject_server.ResponseData-PARAMETERS-SerializedHeader-STRING-1024--SerializedPayload-STRING-8000"
+                "$ref": "tchmi:server#/definitions/PLC1.METHOD-RETURNING-mobject_server.ResponseData-PARAMETERS-SerializedHeader-STRING-1024--SerializedPayload-STRING-512000"
             },
             "USEMAPPING": true
         },
