@@ -37,12 +37,12 @@
   mobjectLitegraph.LiteGraph.auto_sort_node_types = true;
   mobjectLitegraph.LiteGraph.node_box_coloured_when_on = true;
   mobjectLitegraph.LiteGraph.node_box_coloured_by_mode = true;
-  mobjectLitegraph.LiteGraph.dialog_close_on_mouse_leave = true;
+  mobjectLitegraph.LiteGraph.dialog_close_on_mouse_leave = false;
   mobjectLitegraph.LiteGraph.dialog_close_on_mouse_leave_delay = 500;
-  mobjectLitegraph.LiteGraph.shift_click_do_break_link_from = false;
+  mobjectLitegraph.LiteGraph.shift_click_do_break_link_from = true;
   mobjectLitegraph.LiteGraph.click_do_break_link_to = false;
   mobjectLitegraph.LiteGraph.search_hide_on_mouse_leave = true;
-  mobjectLitegraph.LiteGraph.search_filter_enabled = true;
+  mobjectLitegraph.LiteGraph.search_filter_enabled = false;
   mobjectLitegraph.LiteGraph.search_show_all_on_open = true;
   mobjectLitegraph.LiteGraph.show_node_tooltip = true;
   mobjectLitegraph.LiteGraph.show_node_tooltip_use_descr_property = true;
@@ -6638,7 +6638,11 @@
       }
     }
 
-    computeSize() {
+    computeSize(nodeX, nodeY) {
+      if (nodeX !== undefined && nodeY !== undefined) {
+        return new Float32Array([nodeX, 20]);
+      }
+
       let size = new Float32Array([220, 20]);
       var maxValueWidth = 0;
 
@@ -6794,7 +6798,10 @@
       this.eventEmitter.off(eventName, listener);
     }
 
-    computeSize() {
+    computeSize(nodeX, nodeY) {
+      if (nodeX !== undefined && nodeY !== undefined) {
+        return new Float32Array([nodeX, 20]);
+      }
       return new Float32Array([220, 20]);
     }
 
@@ -7049,7 +7056,10 @@
       }
     }
 
-    computeSize() {
+    computeSize(nodeX, nodeY) {
+      if (nodeX !== undefined && nodeY !== undefined) {
+        return new Float32Array([nodeX, 20]);
+      }
       return new Float32Array([220, 20]);
     }
 
