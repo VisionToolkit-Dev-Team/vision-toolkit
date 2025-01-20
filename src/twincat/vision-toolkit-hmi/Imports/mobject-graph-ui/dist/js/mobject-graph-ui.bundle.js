@@ -8509,11 +8509,11 @@
         "Blueprints",
         "fa-solid fa-layer-group",
         async () => {
-          console.log("api get blueprints");
+          LiteGraph.log_log("api get blueprints");
           getBlueprintsButton.disable();
           try {
             const result = await this.connection.send("GetBlueprints");
-            console.log("api get blueprints reply", result);
+            LiteGraph.log_log("api get blueprints reply", result);
             graphFramework.installNodeBlueprints(result.blueprints);
 
             if (result?.blueprints?.length) {
@@ -8809,7 +8809,7 @@
     async createGraph(graph) {
       this.stopPolling();
       const graphPayload = graph.exportForBackend();
-      console.log("api create graph", graph.uuid, graphPayload);
+      mobjectLitegraph.LiteGraph.log_log("api create graph", graph.uuid, graphPayload);
 
       try {
         const status = await this.connection.send("CreateGraph", {
@@ -8826,7 +8826,7 @@
 
     async updateParameterValue(graph, node, name, value) {
       this.stopPolling();
-      console.log("api update property", node, name, value);
+      mobjectLitegraph.LiteGraph.log_log("api update property", node, name, value);
       try {
         const reply = await this.connection.send("UpdateParameterValue", {
           graphUuid: graph.uuid,
@@ -8837,7 +8837,7 @@
         this.startPolling();
       } catch (error) {
         if (error.message.includes("Invalid or missing graphUuid")) {
-          console.log(
+          mobjectLitegraph.LiteGraph.log_error(
             "api update property failed due to unknown graphUuid, triggering update graph"
           );
           await this.createGraph(graph);
@@ -8851,7 +8851,7 @@
       if (this.pollingTimeoutId) {
         clearTimeout(this.pollingTimeoutId);
         this.pollingTimeoutId = null;
-        console.log("polling stopped");
+        mobjectLitegraph.LiteGraph.log_log("polling stopped");
       }
     }
 
@@ -8873,7 +8873,8 @@
             graphUuid: this.currentGraph.uuid,
           });
 
-          console.log("polling reply >", status);
+          mobjectLitegraph.LiteGraph.log_log("polling reply >", status);
+
           if (status.uuid !== this.currentGraph.uuid) {
             console.log("polling reply rejected as graph uuid mismatch");
             this.stopPolling();
@@ -8888,7 +8889,7 @@
         }
       };
 
-      console.log("polling started");
+      mobjectLitegraph.LiteGraph.log_log("polling started");
       this.pollingTimeoutId = setTimeout(poll, this.pollingPeriodInMs);
     }
   }
