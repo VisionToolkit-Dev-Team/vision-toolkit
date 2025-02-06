@@ -7954,6 +7954,38 @@
     off(eventName, listener) {
       this.eventEmitter.off(eventName, listener);
     }
+
+    setDefaultViewpoint() {
+      if (!this.graph || !this.graph._nodes || this.graph._nodes.length === 0) {
+        this.ds.offset[0] = 0;
+        this.ds.offset[1] = 0;
+        this.ds.scale = 1;
+        this.setDirty(true, true);
+        return;
+      }
+
+      const nodes = this.graph._nodes;
+
+      let minX, minY;
+      let temp;
+
+      nodes.forEach((node) => {
+        const bounding = node.getBounding(temp, true);
+
+        if (minX === undefined || minY === undefined) {
+          minX = bounding[0];
+          minY = bounding[1];
+        } else {
+          minX = Math.min(minX, bounding[0]);
+          minY = Math.min(minY, bounding[1]);
+        }
+      });
+
+      this.ds.offset[0] = -minX + 10;
+      this.ds.offset[1] = -minY + 10;
+      this.ds.scale = 1;
+      this.setDirty(true, true);
+    }
   }
 
   // class used to convert the standard serialization of litegraph, to mobject-graph version for use
@@ -8109,7 +8141,34 @@
       });
     }
 
+    getMissingNodeTypes(data) {
+      const nodes = data.nodes || [];
+      const missingNodeTypes = [];
+
+      nodes.forEach((node) => {
+        const nodeType = node.type;
+        const nodeTypeInstance = mobjectLitegraph.LiteGraph.getNodeType(nodeType);
+
+        if (!nodeTypeInstance) {
+          missingNodeTypes.push(nodeType);
+        }
+      });
+
+      return missingNodeTypes.length > 0 ? [...new Set(missingNodeTypes)] : null;
+    }
+
     configure(data, keep_old) {
+      // check for missing node types
+      const missingTypes = this.getMissingNodeTypes(data);
+      if (missingTypes) {
+        const missingTypesList = missingTypes
+          .map((type) => `<li>${type}</li>`)
+          .join("");
+
+        const errorMessage = `The following node types are missing:<ul>${missingTypesList}</ul>Please check that the required blueprints are loaded.`;
+        throw new Error(`${errorMessage}`);
+      }
+
       this.eventEmitter.emit("beforeGraphConfigure", this);
       this.isConfiguring = true;
       super.configure(data, keep_old);
@@ -8178,142 +8237,9 @@
     }
   }
 
-  class GraphEditor {
-    constructor(containerId, connection) {
-      this.eventEmitter = new EventEmitter();
-      this.connection = connection;
-      this.rootElement = null;
-      this.parentDiv = null;
-      this.toolbarElement = null;
-      this.mainWindowElement = null;
-      this.footerElement = null;
-      this.canvasElement = null;
-      this.toastContainer = null;
-      this.graphCanvas = null;
-      this.graph = new Graph();
-      this.toolbarControls = [];
-      this.extensions = [];
-
-      this.makeEditorWindow(containerId);
-      this.setGraph(this.graph);
-
-      const graphFramework = new GraphFramework();
-      graphFramework.applyExtensions("editor", this);
-
-      this.eventEmitter.emit("instantiated", this);
-      return this.graph;
-    }
-
-    getConnection() {
-      return this.connection;
-    }
-
-    getGraph() {
-      return this.graph;
-    }
-
-    getGraphCanvas() {
-      return this.graphCanvas;
-    }
-
-    setGraph(graph) {
-      if (this.graph) {
-        this.eventEmitter.emit("graphReplaced", this.graph);
-      }
-      this.graph = graph;
-      this.graphCanvas.setGraph(this.graph, true);
-
-      this.eventEmitter.emit("graphSet", this.graph);
-
-      return graph;
-    }
-
-    on(eventName, listener) {
-      this.eventEmitter.on(eventName, listener);
-    }
-
-    off(eventName, listener) {
-      this.eventEmitter.off(eventName, listener);
-    }
-
-    addToolbarControl(toolbarControl) {
-      this.toolbarControls.push(toolbarControl);
-      const controlElement = toolbarControl.render();
-      this.toolbarElement.appendChild(controlElement);
-      this.resizeCanvas();
-    }
-
-    applyExtension(extension) {
-      this.eventEmitter.emit("applyExtension", extension);
-      try {
-        const instance = new extension(this);
-        this.extensions.push(instance);
-      } catch (error) {
-        if (
-          typeof extension === "object" &&
-          typeof extension.apply === "function"
-        ) {
-          extension.apply(this);
-          this.extensions.push(extension);
-        } else {
-          throw new Error(
-            "Extension must be a class or an object with an apply method"
-          );
-        }
-      }
-    }
-
-    makeEditorWindow(container_id, options = {}) {
-      const root = (this.rootElement = document.createElement("div"));
-      root.className = "mgui mgui-editor";
-      root.innerHTML = `
-    
-    <div class="mgui-editor-toolbar">
-        <div class="mgui-editor-tools mgui-editor-tools-left">
-        </div>
-        <div class="mgui-editor-tools mgui-editor-tools-right"></div>
-    </div>
-    <div class="mgui-editor-main-window">
-        <canvas class="mgui-editor-graphcanvas"></canvas>   
-        <div class="toast-container" aria-live="polite" aria-atomic="true">
-    </div>
-    </div>
-    <div class="mgui-editor-footer">
-        <div class="mgui-editor-tools mgui-editor-tools-left"></div>
-        <div class="mgui-editor-tools mgui-editor-tools-right"></div>
-    </div>`;
-
-      this.toolbarElement = root.querySelector(".mgui-editor-toolbar");
-      this.mainWindowElement = root.querySelector(".mgui-editor-main-window");
-      this.footerElement = root.querySelector(".mgui-editor-footer");
-      this.toastContainer = root.querySelector(".toast-container");
-
-      const canvas = (this.canvasElement = root.querySelector(
-        ".mgui-editor-graphcanvas"
-      ));
-
-      this.graphCanvas = new GraphCanvas(canvas);
-      this.graphCanvas.render_canvas_border = false;
-
-      this.parentDiv = document.getElementById(container_id);
-      if (this.parentDiv) {
-        this.parentDiv?.appendChild(root);
-        this.resizeCanvas();
-        window.addEventListener("resize", this.resizeCanvas.bind(this));
-      } else {
-        throw new Error("Editor has no parentElement to bind to");
-      }
-    }
-
-    resizeCanvas() {
-      const availableHeight =
-        this.parentDiv.clientHeight -
-        this.toolbarElement.offsetHeight -
-        this.footerElement.offsetHeight;
-      this.mainWindowElement.style.height = availableHeight + "px";
-      this.canvasElement.height = availableHeight;
-      this.canvasElement.style.height = availableHeight + "px";
-      this.graphCanvas.resize();
+  class Toasts {
+    constructor(toastContainer) {
+      this.toastContainer = toastContainer;
     }
 
     generateToastId() {
@@ -8331,6 +8257,7 @@
         autoHide,
         extraHtml = "";
 
+      // Define styles and behavior based on toastType
       switch (toastType) {
         case "error":
           bgColor = "bg-danger";
@@ -8354,7 +8281,7 @@
           autoHide = true;
           break;
         case "info":
-          bgColor = "bg-info";
+          bgColor = "bg-light";
           textColor = "text-black";
           btnColor = "btn-close-black";
           delay = 4000;
@@ -8367,12 +8294,17 @@
           delay = 0;
           autoHide = false;
           extraHtml = `
-                <div class="d-flex justify-content-end mt-2">
-                    <button class="btn btn-primary btn-sm me-2" id="${id}-ok-btn">OK</button>
-                    <button class="btn btn-secondary btn-sm" id="${id}-cancel-btn">Cancel</button>
-                </div>
-            `;
+          <div class="d-flex justify-content-end mt-2">
+            <button class="btn btn-primary btn-sm me-2" id="${id}-ok-btn">
+              OK
+            </button>
+            <button class="btn btn-secondary btn-sm" id="${id}-cancel-btn">
+              Cancel
+            </button>
+          </div>
+        `;
           break;
+
         default:
           bgColor = "bg-secondary";
           textColor = "text-white";
@@ -8380,22 +8312,25 @@
       }
 
       const toastHtml = `
-        <div id="${id}" class="toast ${bgColor} ${textColor}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="${autoHide}" data-bs-delay="${delay}">
-            <div class="toast-header ${bgColor} ${textColor}">
-                <strong class="me-auto">${title}</strong>
-                <button type="button" class="btn-close ${btnColor}" data-bs-dismiss="toast" aria-label="Close"></button>
+            <div id="${id}" class="toast ${bgColor} ${textColor}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="${autoHide}" data-bs-delay="${delay}">
+                <div class="toast-header ${bgColor} ${textColor}">
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close ${btnColor}" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body ${textColor}">${message}${extraHtml}</div>
             </div>
-            <div class="toast-body ${textColor}">${message}${extraHtml}</div>
-        </div>
-    `;
+        `;
 
       let toastNode = document.createElement("div");
       toastNode.innerHTML = toastHtml;
-
       this.toastContainer.appendChild(toastNode);
 
       $(`#${id}`).toast("show");
 
+      this.setupToastEventListeners(id, toastType, callbacks);
+    }
+
+    setupToastEventListeners(id, toastType, callbacks) {
       if (toastType === "okCancel") {
         document.getElementById(`${id}-ok-btn`).addEventListener("click", () => {
           if (callbacks.onOk) callbacks.onOk();
@@ -8437,6 +8372,32 @@
 
     showOkCancel(title, message, callbacks) {
       this.showToast(title, message, "okCancel", callbacks);
+    }
+  }
+
+  class ToolbarGroup {
+    constructor(name) {
+      this.name = name;
+      this.container = document.createElement("div");
+      this.container.className = "btn-group";
+      this.container.setAttribute("role", "group");
+      this.container.setAttribute("aria-label", `${name} button group`);
+    }
+
+    addButton(button) {
+      const buttonElement = button.render();
+      buttonElement.classList.add("btn", "btn-primary");
+      this.container.appendChild(buttonElement);
+    }
+
+    render() {
+      return this.container;
+    }
+
+    addSeparator() {
+      const separator = document.createElement("div");
+      separator.className = "vr";
+      this.container.appendChild(separator);
     }
   }
 
@@ -8495,172 +8456,435 @@
     }
   }
 
+  class ToolbarSeparator {
+    render() {
+      const separator = document.createElement("div");
+      separator.className = "mgui-toolbar-separator";
+      return separator;
+    }
+  }
+
+  class GraphEditor {
+    constructor(containerId, connection) {
+      this.eventEmitter = new EventEmitter();
+      this.connection = connection;
+      this.rootElement = null;
+      this.parentDiv = null;
+      this.toolbarElement = null;
+      this.mainWindowElement = null;
+      this.footerElement = null;
+      this.canvasElement = null;
+      this.toastContainer = null;
+      this.toasts = null;
+      this.graphCanvas = null;
+      this.graph = new Graph();
+      this.toolbarControls = [];
+      this.extensions = [];
+
+      this.makeEditorWindow(containerId);
+      this.setGraph(this.graph);
+
+      const graphFramework = new GraphFramework();
+      graphFramework.applyExtensions("editor", this);
+
+      this.eventEmitter.emit("toolbarReady");
+      this.eventEmitter.emit("instantiated", this);
+      return this;
+    }
+
+    loadGraph(graphData) {
+      this.graph.configure(graphData);
+      this.graphCanvas.setDefaultViewpoint();
+    }
+
+    clearGraph() {
+      this.graph.clear();
+    }
+
+    serializeGraph() {
+      return this.graph.serialize();
+    }
+
+    getGraph() {
+      return this.graph;
+    }
+
+    getGraphCanvas() {
+      return this.graphCanvas;
+    }
+
+    setGraph(graph) {
+      if (this.graph) {
+        this.eventEmitter.emit("graphReplaced", this.graph);
+      }
+      this.graph = graph;
+      this.graphCanvas.setGraph(this.graph, true);
+
+      this.eventEmitter.emit("graphSet", this.graph);
+
+      return graph;
+    }
+
+    on(eventName, listener) {
+      this.eventEmitter.on(eventName, listener);
+    }
+
+    off(eventName, listener) {
+      this.eventEmitter.off(eventName, listener);
+    }
+
+    addButton(id, options) {
+      const button = new ToolbarButton(
+        id,
+        options.label,
+        options.iconClass,
+        options.onClick,
+        options.tooltip
+      );
+
+      // New group handling logic
+      if (options.group) {
+        const group = this.getOrCreateButtonGroup(
+          options.group,
+          options.section || "left",
+          options.groupPosition
+        );
+        group.addButton(button);
+      } else {
+        this.addToolbarControl(button, {
+          section: options.section,
+          position: options.position,
+          referenceId: options.referenceId,
+        });
+      }
+
+      return button;
+    }
+
+    getOrCreateButtonGroup(groupName, section = "left", position = "end") {
+      if (!this.buttonGroups)
+        this.buttonGroups = { left: {}, center: {}, right: {} };
+
+      if (!this.buttonGroups[section][groupName]) {
+        const group = new ToolbarGroup(groupName);
+        this.addToolbarControl(group, {
+          section,
+          position,
+          referenceId: groupName, // For future reference
+        });
+        this.buttonGroups[section][groupName] = group;
+      }
+
+      return this.buttonGroups[section][groupName];
+    }
+
+    addSeparator(section = "left") {
+      const separator = new ToolbarSeparator();
+      this.addToolbarControl(separator, { section });
+      return separator;
+    }
+
+    addToolbarControl(toolbarControl, options = {}) {
+      const { section = "left", position = "end", referenceId = null } = options;
+      const sectionElement = this.toolbarElement.querySelector(
+        `.mgui-toolbar-section.${section}`
+      );
+
+      if (!sectionElement) {
+        console.warn(
+          `Toolbar section '${section}' not found. Appending to left.`
+        );
+        return this.addToolbarControl(toolbarControl, {
+          ...options,
+          section: "left",
+        });
+      }
+
+      const controlElement = toolbarControl.render();
+      toolbarControl.section = section;
+
+      if (position === "start") {
+        sectionElement.insertBefore(controlElement, sectionElement.firstChild);
+      } else if (referenceId) {
+        const referenceElement = sectionElement.querySelector(`#${referenceId}`);
+        if (referenceElement) {
+          sectionElement.insertBefore(
+            controlElement,
+            position === "before"
+              ? referenceElement
+              : referenceElement.nextSibling
+          );
+        } else {
+          sectionElement.appendChild(controlElement);
+        }
+      } else {
+        sectionElement.appendChild(controlElement);
+      }
+
+      this.toolbarControls.push(toolbarControl);
+      this.resizeCanvas();
+      return controlElement;
+    }
+
+    applyExtension(extension) {
+      this.eventEmitter.emit("applyExtension", extension);
+      try {
+        const instance = new extension(this);
+        this.extensions.push(instance);
+      } catch (error) {
+        if (
+          typeof extension === "object" &&
+          typeof extension.apply === "function"
+        ) {
+          extension.apply(this);
+          this.extensions.push(extension);
+        } else {
+          throw new Error(
+            "Extension must be a class or an object with an apply method"
+          );
+        }
+      }
+    }
+
+    makeEditorWindow(container_id, options = {}) {
+      const root = (this.rootElement = document.createElement("div"));
+      root.className = "mgui mgui-editor";
+      root.innerHTML = `
+    
+    <div class="mgui-editor-toolbar ">
+      <div class="mgui-toolbar-section left"></div>
+      <div class="mgui-toolbar-section center"></div>
+      <div class="mgui-toolbar-section right"></div>
+    </div>
+    <div class="mgui-editor-main-window">
+        <canvas class="mgui-editor-graphcanvas"></canvas>   
+        <div class="toast-container" aria-live="polite" aria-atomic="true">
+    </div>
+    </div>
+    <div class="mgui-editor-footer">
+        <div class="mgui-editor-tools mgui-editor-tools-left"></div>
+        <div class="mgui-editor-tools mgui-editor-tools-right"></div>
+    </div>`;
+
+      this.toolbarElement = root.querySelector(".mgui-editor-toolbar");
+      this.mainWindowElement = root.querySelector(".mgui-editor-main-window");
+      this.footerElement = root.querySelector(".mgui-editor-footer");
+      this.toastContainer = root.querySelector(".toast-container");
+      this.toasts = new Toasts(this.toastContainer);
+
+      const canvas = (this.canvasElement = root.querySelector(
+        ".mgui-editor-graphcanvas"
+      ));
+
+      this.graphCanvas = new GraphCanvas(canvas);
+      this.graphCanvas.render_canvas_border = false;
+
+      this.parentDiv = document.getElementById(container_id);
+      if (this.parentDiv) {
+        this.parentDiv?.appendChild(root);
+        this.resizeCanvas();
+        window.addEventListener("resize", this.resizeCanvas.bind(this));
+      } else {
+        throw new Error("Editor has no parentElement to bind to");
+      }
+    }
+
+    resizeCanvas() {
+      const toolbarStyle = window.getComputedStyle(this.toolbarElement);
+      const footerStyle = window.getComputedStyle(this.footerElement);
+
+      const toolbarHeight =
+        this.toolbarElement.offsetHeight +
+        parseInt(toolbarStyle.marginTop) +
+        parseInt(toolbarStyle.marginBottom);
+      const footerHeight =
+        this.footerElement.offsetHeight +
+        parseInt(footerStyle.marginTop) +
+        parseInt(footerStyle.marginBottom);
+
+      const availableHeight =
+        this.parentDiv.clientHeight - toolbarHeight - footerHeight;
+
+      this.mainWindowElement.style.height = availableHeight + "px";
+      this.canvasElement.height = availableHeight;
+      this.canvasElement.style.height = availableHeight + "px";
+      this.graphCanvas.resize();
+    }
+
+    showWarning(title, message) {
+      this.toasts.showWarning(title, message);
+    }
+
+    showError(title, message) {
+      this.toasts.showError(title, message);
+    }
+
+    showSuccess(title, message) {
+      this.toasts.showSuccess(title, message);
+    }
+
+    showInfo(title, message) {
+      this.toasts.showInfo(title, message);
+    }
+
+    showMessage(title, message) {
+      this.toasts.showMessage(title, message);
+    }
+
+    showOkCancel(title, message, callbacks) {
+      this.toasts.showOkCancel(title, message, callbacks);
+    }
+
+    async apiSend(action, data) {
+      return this.connection.send(action, data);
+    }
+  }
+
   class GetBlueprintsExtension {
     constructor(editor) {
       this.editor = editor;
-      this.connection = editor.getConnection();
-      this.setupToolbarControls();
+      this.getBlueprintsButton;
+
+      this.editor.on("toolbarReady", () => {
+        this.getBlueprintsButton = this.editor.addButton("GetBlueprints", {
+          label: "Blueprints",
+          iconClass: "fa-solid fa-layer-group",
+          onClick: this.onBlueprintsClicked.bind(this),
+          tooltip: "Get Blueprints",
+          section: "left",
+        });
+
+        this.onBlueprintsClicked();
+      });
     }
 
-    setupToolbarControls() {
+    async onBlueprintsClicked() {
       const graphFramework = new GraphFramework();
-      const getBlueprintsButton = new ToolbarButton(
-        "GetBlueprints",
-        "Blueprints",
-        "fa-solid fa-layer-group",
-        async () => {
-          LiteGraph.log_log("api get blueprints");
-          getBlueprintsButton.disable();
-          try {
-            const result = await this.connection.send("GetBlueprints");
-            LiteGraph.log_log("api get blueprints reply", result);
-            graphFramework.installNodeBlueprints(result.blueprints);
-
-            if (result?.blueprints?.length) {
-              this.editor.showSuccess(
-                "Blueprints loaded successfully",
-                `${result.blueprints.length} blueprints were received.`
-              );
-            }
-          } catch (error) {
-            this.editor.showError("Failed to get blueprints", error);
-          } finally {
-            getBlueprintsButton.enable();
-          }
-        },
-        "Get Blueprints"
+      LiteGraph.log_log("api get blueprints");
+      this.editor.showInfo(
+        "Loading Blueprints",
+        "Please wait while the blueprints are fetched from the server."
       );
+      this.getBlueprintsButton.disable();
+      try {
+        const result = await this.editor.apiSend("GetBlueprints");
+        LiteGraph.log_log("api get blueprints reply", result);
+        graphFramework.installNodeBlueprints(result.blueprints);
 
-      this.editor.addToolbarControl(getBlueprintsButton);
+        if (result?.blueprints?.length) {
+          this.editor.showSuccess(
+            "Blueprints loaded successfully",
+            `${result.blueprints.length} blueprints were received.`
+          );
+        }
+      } catch (error) {
+        this.editor.showError("Failed to get blueprints", error);
+      } finally {
+        this.getBlueprintsButton.enable();
+      }
     }
   }
 
   class FileOperationsExtension {
     constructor(editor) {
       this.editor = editor;
-      this.currentGraph = null;
-      this.editorCanvas = editor.getGraphCanvas();
       this.setupEditorListeners();
-      this.setupToolbarControls();
-      this.switchGraph(this.editor.getGraph());
     }
 
     setupEditorListeners() {
-      this.editor.on("graphSet", (newGraph) => {
-        this.switchGraph(newGraph);
+      this.editor.on("toolbarReady", () => {
+        this.editor.addButton("New", {
+          label: "New",
+          iconClass: "fa-solid fa-file",
+          onClick: this.onNewClicked.bind(this),
+          tooltip: "New Graph",
+          section: "left",
+          group: "fileOperations",
+        });
+        this.editor.addButton("Open", {
+          label: "Open",
+          iconClass: "fa-solid fa-folder-open",
+          onClick: this.onOpenClicked.bind(this),
+          tooltip: "Open Graph",
+          section: "left",
+          group: "fileOperations",
+        });
+        this.editor.addButton("Save", {
+          label: "Save",
+          iconClass: "fa-solid fa-floppy-disk",
+          onClick: this.onSaveClicked.bind(this),
+          tooltip: "Save Graph",
+          section: "left",
+          group: "fileOperations",
+        });
       });
     }
 
-    switchGraph(newGraph) {
-      this.currentGraph = newGraph;
+    onNewClicked() {
+      this.editor.clearGraph();
     }
 
-    setupToolbarControls() {
-      const newGraphButton = new ToolbarButton(
-        "New",
-        "New",
-        "fa-solid fa-file",
-        () => {
-          if (!this.currentGraph) {
-            return;
-          }
-          this.currentGraph.clear();
-        },
-        "New Graph"
-      );
-      const openGraphButton = new ToolbarButton(
-        "Open",
-        "Open",
-        "fa-solid fa-folder-open",
-        async () => {
-          try {
-            const [fileHandle] = await window.showOpenFilePicker({
-              types: [
-                {
-                  description: "Graph Files",
-                  accept: { "application/mgraph": [".mgraph"] },
-                },
-              ],
-              multiple: false,
-            });
+    async onOpenClicked() {
+      try {
+        const [fileHandle] = await window.showOpenFilePicker({
+          types: [
+            {
+              description: "Graph Files",
+              accept: { "application/mgraph": [".mgraph"] },
+            },
+          ],
+          multiple: false,
+        });
 
-            const file = await fileHandle.getFile();
-            const contents = await file.text();
-            const configuration = JSON.parse(contents);
+        const file = await fileHandle.getFile();
+        const contents = await file.text();
+        const configuration = JSON.parse(contents);
 
-            const missingTypes = getMissingNodeTypes(configuration);
-            if (missingTypes) {
-              const missingTypesList = missingTypes
-                .map((type) => `<li>${type}</li>`)
-                .join("");
-              this.editor.showError(
-                "Open Failed : Missing Node Types",
-                `The following node types are missing:<ul>${missingTypesList}</ul>Please check that the required blueprints are loaded.`
-              );
-              return;
-            }
-
-            this.currentGraph.configure(configuration);
-          } catch (error) {
-            this.editor.showError(
-              "Open Failed : Exception was thrown",
-              "There was an error while trying to open the file. Please check the console for more information."
-            );
-          }
-        },
-        "Open Graph"
-      );
-      const saveGraphButton = new ToolbarButton(
-        "Save",
-        "Save",
-        "fa-solid fa-floppy-disk",
-        async () => {
-          try {
-            const fileHandle = await window.showSaveFilePicker({
-              types: [
-                {
-                  description: "Graph Files",
-                  accept: { "application/mgraph": [".mgraph"] },
-                },
-              ],
-            });
-
-            const writable = await fileHandle.createWritable();
-            await writable.write(JSON.stringify(this.currentGraph.serialize()));
-            await writable.close();
-          } catch (error) {
-            console.error("Failed to save file:", error);
-          }
-        },
-        "Save Graph"
-      );
-
-      this.editor.addToolbarControl(newGraphButton);
-      this.editor.addToolbarControl(openGraphButton);
-      this.editor.addToolbarControl(saveGraphButton);
-    }
-  }
-
-  function getMissingNodeTypes(data) {
-    const nodes = data.nodes || [];
-    const missingNodeTypes = [];
-
-    nodes.forEach((node) => {
-      const nodeType = node.type;
-      const nodeTypeInstance = mobjectLitegraph.LiteGraph.getNodeType(nodeType);
-
-      if (!nodeTypeInstance) {
-        missingNodeTypes.push(nodeType);
+        try {
+          this.editor.loadGraph(configuration);
+          this.editor.showSuccess(
+            `Graph Loaded`,
+            `Successfully loaded "${file.name}"`
+          );
+        } catch (error) {
+          this.editor.showError(
+            "Open Failed : Configuration Error",
+            `Error during graph configuration: ${error.message}`
+          );
+        }
+      } catch (error) {
+        this.editor.showError(
+          "Open Failed : File Access",
+          "There was an error while trying to access or read the file. Please check the console for more information."
+        );
+        console.error(error);
+        return;
       }
-    });
+    }
 
-    return missingNodeTypes.length > 0 ? [...new Set(missingNodeTypes)] : null;
+    async onSaveClicked() {
+      try {
+        const fileHandle = await window.showSaveFilePicker({
+          types: [
+            {
+              description: "Graph Files",
+              accept: { "application/mgraph": [".mgraph"] },
+            },
+          ],
+        });
+
+        const writable = await fileHandle.createWritable();
+        await writable.write(JSON.stringify(this.editor.serializeGraph()));
+        await writable.close();
+      } catch (error) {
+        console.error("Failed to save file:", error);
+      }
+    }
   }
 
   class EditorAutoUpdateExtension {
     constructor(editor) {
       this.editor = editor;
-      this.connection = editor.getConnection();
       this.currentGraph = null;
       this.graphIsConfiguring = false;
       this.pollingTimeoutId = null;
@@ -8812,7 +9036,7 @@
       mobjectLitegraph.LiteGraph.log_log("api create graph", graph.uuid, graphPayload);
 
       try {
-        const status = await this.connection.send("CreateGraph", {
+        const status = await this.editor.apiSend("CreateGraph", {
           graph: graphPayload,
         });
         if (status.uuid === graph.uuid) {
@@ -8828,7 +9052,7 @@
       this.stopPolling();
       mobjectLitegraph.LiteGraph.log_log("api update property", node, name, value);
       try {
-        const reply = await this.connection.send("UpdateParameterValue", {
+        const reply = await this.editor.apiSend("UpdateParameterValue", {
           graphUuid: graph.uuid,
           nodeId: node.id,
           parameterName: name,
@@ -8869,7 +9093,7 @@
         if (!this.isPolling()) return;
 
         try {
-          const status = await this.connection.send("GetStatus", {
+          const status = await this.editor.apiSend("GetStatus", {
             graphUuid: this.currentGraph.uuid,
           });
 
@@ -8898,23 +9122,22 @@
     constructor(editor) {
       this.editor = editor;
       this.editorCanvas = editor.getGraphCanvas();
-      this.setupToolbarControls();
+
+      this.editor.on("toolbarReady", () => {
+        this.getBlueprintsButton = this.editor.addButton("ToggleExecuteOrder", {
+          label: "",
+          iconClass: "fa-solid fa-share-nodes",
+          onClick: this.onToggleExecuteOrderClicked.bind(this),
+          tooltip: "Toggle Execution Order Display",
+          section: "left",
+        });
+      });
     }
 
-    setupToolbarControls() {
-      const getBlueprintsButton = new ToolbarButton(
-        "ToggleExecuteOrder",
-        "",
-        "fas fa-share-nodes",
-        () => {
-          this.editorCanvas.render_execution_order =
-            !this.editorCanvas.render_execution_order;
-          this.editorCanvas.setDirty(true, true);
-        },
-        "Toggle Execution Order Display"
-      );
-
-      this.editor.addToolbarControl(getBlueprintsButton);
+    onToggleExecuteOrderClicked() {
+      this.editorCanvas.render_execution_order =
+        !this.editorCanvas.render_execution_order;
+      this.editorCanvas.setDirty(true, true);
     }
   }
 
@@ -9072,6 +9295,7 @@
   exports.NumericInputComponent = NumericInputComponent;
   exports.SingleLineTextDisplayComponent = SingleLineTextDisplayComponent;
   exports.SingleLineTextInputComponent = SingleLineTextInputComponent;
+  exports.ToolbarButton = ToolbarButton;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

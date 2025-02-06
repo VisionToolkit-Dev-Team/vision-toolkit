@@ -1,0 +1,1 @@
+C:\TwinCAT\3.1\Components\Plc\Common\reptool --profile="TwinCAT PLC Control" --installLibsRecurs ".\src\twincat\vision-toolkit\Main\_Libraries\mobject"

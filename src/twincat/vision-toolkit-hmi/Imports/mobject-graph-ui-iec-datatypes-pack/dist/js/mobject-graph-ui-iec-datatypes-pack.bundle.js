@@ -155,7 +155,7 @@
     get precision() {
       return this.getMetadataOrDefault(
         "precision",
-        this.datatype.isFloat ? 2 : 0
+        this.datatype.isFloat ? 5 : 0
       );
     }
 

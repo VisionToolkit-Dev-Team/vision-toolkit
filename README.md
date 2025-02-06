@@ -35,7 +35,7 @@ git clone https://github.com/VisionToolkit-Dev-Team/vision-toolkit
 
 2. Open, activate and run the TwinCAT project `\src\twincat\vision-toolkit.sln`.
 
-If you are missing any of the mobject-libraries, then simply right click on the project and select "Install Project Library (unknown versions)"
+If you are missing any of the mobject-libraries, then simply right click on the project and select "Install Project Library (unknown versions)". Alternatively, if you are running 4024, you can open the root folder of the repo and double click `install-libraries.bat`.
 
 3. Open the vision-toolkit-hmi in the solution tree
 4. Start live view
