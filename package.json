@@ -19,12 +19,12 @@
   "license": "MIT",
   "dependencies": {
     "mobject-client": "^2.1.0",
-    "mobject-graph-ui": "^0.1.36",
+    "mobject-graph-ui": "^0.1.45",
     "mobject-graph-ui-iec-datatypes-pack": "^0.1.6",
-    "mobject-graph-ui-vision-pack": "^0.1.7",
+    "mobject-graph-ui-vision-pack": "^0.1.12",
     "mobject-litegraph": "^0.1.11"
   },
   "devDependencies": {
-    "npm-check-updates": "^17.1.14"
+    "npm-check-updates": "^17.1.18"
   }
 }
