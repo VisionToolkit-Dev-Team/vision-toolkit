@@ -25,6 +25,6 @@
     "mobject-litegraph": "^0.1.11"
   },
   "devDependencies": {
-    "npm-check-updates": "^17.1.18"
+    "npm-check-updates": "^18.0.1"
   }
 }

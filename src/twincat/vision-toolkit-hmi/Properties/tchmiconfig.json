@@ -100,6 +100,16 @@
       "name": "Imports/mobject-litegraph/dist/css/mobject-litegraph.css",
       "description": "",
       "type": "Stylesheet"
+    },
+    {
+      "name": "Imports/bootstrap/bootstrap.min.css",
+      "description": "",
+      "type": "Stylesheet"
+    },
+    {
+      "name": "Imports/bootstrap/bootstrap.bundle.min.js",
+      "description": "",
+      "type": "JavaScript"
     }
   ],
   "userControls": [],

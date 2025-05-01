@@ -137,6 +137,8 @@
     <Folder Include="Imports\mobject-litegraph\dist\css" />
     <Folder Include="Imports\mobject-litegraph\dist\js" />
     <Folder Include="Imports\mobject-client" />
+    <Folder Include="Imports\bootstrap" />
+    <Folder Include="Imports\jquery" />
     <Folder Include="Imports\Videos" />
     <Folder Include="KeyboardLayouts\" />
     <Folder Include="Localization" />
@@ -155,6 +157,12 @@
       <Visible>false</Visible>
     </Content>
     <Content Include="Fonts\Roboto-Condensed-webfont.woff">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Imports\bootstrap\bootstrap.bundle.min.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Imports\bootstrap\bootstrap.min.css">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Imports\mobject-client\TcHmiRpcClient.bundle.js">

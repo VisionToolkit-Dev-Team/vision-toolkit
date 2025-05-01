@@ -11,6 +11,7 @@ VAR
 	iecDatatypesPack : IecDatatypesPack; // mobject-graph, 
 	plcPack : PlcPack; // mobject-graph-plc-pack
 	visionPack : VisionPack; // mobject-graph-vision-pack
+	mathPack : MathPack; // mobject-graph-math-pack, this is all packs.  You can also select sub-packs if needed
 	
 	// custom node
 	myCustomNode : MyCustomNode;
@@ -36,6 +37,7 @@ END_VAR]]></Declaration>
 	graphFramework.Install(iecDatatypesPack); // adds primitives such as BOOL, WORD, STRING...
 	graphFramework.Install(plcPack); // adds datatypes and nodes base on TC2_Utilities...
 	graphFramework.Install(visionPack); // adds datatypes and nodes for TC3_Vision...
+	graphFramework.Install(mathPack); // adds all of the math packs.  
 	
 	// add any custom datatypes here...
 	// graphFramework.Datatypes.RegisterDatatype(_customDatatype);

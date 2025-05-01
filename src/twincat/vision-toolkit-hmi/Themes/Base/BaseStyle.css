@@ -351,3 +351,12 @@ div[data-tchmi-type="TcHmi.Controls.System.TcHmiView"] {
         .tchmi-view-loading-spinner div:nth-child(3) {
             animation-delay: -0.15s;
         }
+
+/** 
+* Temp fix for modal-backdrop bug
+* With latest version of bootstrap, the background for the modal is above the modal, so as a quick fix
+* the visibility has been set to collapse.
+*/
+.modal-backdrop {
+    visibility : collapse !important;
+}
