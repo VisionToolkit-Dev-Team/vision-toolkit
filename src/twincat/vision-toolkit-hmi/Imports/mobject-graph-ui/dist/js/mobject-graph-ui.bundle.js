@@ -9248,6 +9248,36 @@
       }
     }
 
+    async updateParameterValue(graph, node, name, value) {
+      this.stopPolling();
+      mobjectLitegraph.LiteGraph.log_log("api update property", node, name, value);
+
+      try {
+        const reply = await this.editor.apiSend("UpdateParameterValue", {
+          graphUuid: graph.uuid,
+          nodeId: node.id,
+          parameterName: name,
+          parameterValue: value,
+        });
+        this.startPolling();
+      } catch (error) {
+        switch (error.code) {
+          case "INVALID_GRAPH_INSTANCE_ID": // a graph instance id was not found, so may need to create a new one
+          case "NO_GRAPH_INSTANCE_AVAILABLE": // no graph instance available, so may need to create a new one
+          case "GRAPH_UUID_MISSMATCH": // the graph uuid does not match the one in the backend, so create a new one
+            mobjectLitegraph.LiteGraph.log_info(
+              `api update property failed [${error.code}], sending full graph instead`
+            );
+            await this.createGraph(graph);
+            break;
+
+          default:
+            console.error("Update parameter value failed:", error);
+            break;
+        }
+      }
+    }
+
     stopPolling() {
       if (this.pollingTimeoutId) {
         clearTimeout(this.pollingTimeoutId);

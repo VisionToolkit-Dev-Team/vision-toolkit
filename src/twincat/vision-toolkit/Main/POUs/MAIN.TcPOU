@@ -25,9 +25,10 @@ VAR
 	displayImage3Node : DisplayableImageNode(displayImage3);
 
 	// application
+	server : RpcServer; // used by the api to communicate to the frontend over ADS
 	graphFramework : GraphFramework;
-	server : RpcServer;
-	graphFrameworkApi : GraphFrameworkApi(graphFramework);	
+	graphRuntime : GraphRuntime('PlcTask'); // this is what is used to hold and run graphs created by the API.  The name is just a name used to identify it. 
+	graphFrameworkApi : GraphFrameworkApi(graphFramework, graphRuntime);
 
 END_VAR]]></Declaration>
     <Implementation>
@@ -58,8 +59,9 @@ END_VAR]]></Declaration>
 
 END_IF
 
-// a special feature of .RegisterApi is that the server will know to cyclic call all registered apis each cycle. 
-server.CyclicCall();]]></ST>
+// cyclic poll the server and runtime.
+server.CyclicCall();
+graphRuntime.CyclicCall();]]></ST>
     </Implementation>
   </POU>
 </TcPlcObject>
