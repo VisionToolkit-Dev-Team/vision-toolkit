@@ -6763,11 +6763,11 @@
       this.precision = precision;
       this.limiter = limiter;
       this.colorGenerator = colorGenerator;
-      this._value = defaultValue;
       this.isDragging = false;
       this.startX = 0;
       this.step = this.calculateStep(precision);
       this.setupDefaults();
+      this.limiter.value = defaultValue;
     }
 
     setupDefaults() {
@@ -6782,12 +6782,14 @@
     }
 
     get value() {
-      return this._value;
+      return this.limiter.value;
     }
 
     set value(value) {
-      this._value = value;
-      this.eventEmitter.emit("onChange", this._value);
+      if (value == this.limiter.value) return;
+
+      this.limiter.value = value;
+      this.notifyValueChange();
     }
 
     on(eventName, listener) {
@@ -6845,7 +6847,6 @@
       if (Math.abs(currentX - this.startX) > 1) {
         const stepCount = Math.floor(currentX - this.startX);
         this.limiter.incrementBy(stepCount * this.step * multiplier);
-        this._value = this.limiter.getValue();
         this.startX = currentX;
         this.isDragging = true;
       }
@@ -6857,7 +6858,7 @@
       }
       this.isDragging = false;
       this.isMyMouseEvent = false;
-      this.updateValueOnRelease();
+      this.notifyValueChange();
     }
 
     isInsideInputArea(x, widgetWidth) {
@@ -6872,7 +6873,6 @@
         // up arrow
         this.limiter.incrementBy(this.step * multiplier);
       }
-      this._value = this.limiter.getValue();
     }
 
     promptForValue(event) {
@@ -6884,9 +6884,7 @@
         function (inputValue) {
           const value = Number(inputValue);
           if (!isNaN(value)) {
-            widget.limiter.setValue(value);
-            widget.value = widget.limiter.getValue();
-            widget.updateValueOnRelease();
+            widget.value = value;
           } else {
             console.error("Invalid input: Input is not a number.");
           }
@@ -6895,9 +6893,9 @@
       );
     }
 
-    updateValueOnRelease() {
-      this.limiter.setValue(this.value);
-      this.value = this.limiter.getValue();
+    notifyValueChange() {
+      console.log("Value changed:", this.value);
+      this.eventEmitter.emit("onChange", this.value);
     }
 
     draw(ctx, node, widget_width, y, H) {
@@ -6948,7 +6946,7 @@
       ctx.fillStyle = this.valueTextColor;
       ctx.textAlign = "right";
       ctx.fillText(
-        Number(this._value).toFixed(this.precision),
+        Number(this.value).toFixed(this.precision),
         drawWidth - 5,
         y + H * 0.7
       );
@@ -7166,7 +7164,7 @@
       this.#precision = precision;
 
       this.#initLimits();
-      this.setValue(this.#value);
+      this.value = initialValue;
     }
 
     #shouldAdjust(number) {
@@ -7184,7 +7182,27 @@
       this.#limitMaximum = this.#adjustLimit(this.#maximum, -1);
     }
 
-    setValue(newValue) {
+    incrementBy(amount) {
+      let newVal = this.#value + amount;
+      if (this.#shouldAdjust(newVal)) {
+        newVal += 1;
+      }
+      this.value = newVal;
+    }
+
+    decrementBy(amount) {
+      let newVal = this.#value - amount;
+      if (this.#shouldAdjust(newVal)) {
+        newVal += 1;
+      }
+      this.value = newVal;
+    }
+
+    get value() {
+      return this.#value;
+    }
+
+    set value(newValue) {
       if (this.#shouldAdjust(newValue)) {
         newValue += 1;
       }
@@ -7195,22 +7213,12 @@
       );
     }
 
-    incrementBy(amount) {
-      if (this.#shouldAdjust(this.#value + amount)) {
-        amount += 1;
-      }
-      this.setValue(this.#value + amount);
-    }
-
-    decrementBy(amount) {
-      if (this.#shouldAdjust(this.#value - amount)) {
-        amount += 1;
-      }
-      this.setValue(this.#value - amount);
+    setValue(newValue) {
+      this.value = newValue;
     }
 
     getValue() {
-      return this.#value;
+      return this.value;
     }
   }
 
@@ -8432,7 +8440,10 @@
       contentHtml += `<span class="button-label">${this.label}</span>`;
       this.button.innerHTML = contentHtml;
       if (this.onClick) {
-        this.button.addEventListener("click", this.onClick);
+        this.button.addEventListener("click", (e) => {
+          this.onClick(e);
+          e.currentTarget.blur();
+        });
       }
       return this.button;
     }
@@ -9001,6 +9012,9 @@
           );
         }
       } catch (error) {
+        if (error.name === "AbortError") {
+          return;
+        }
         this.editor.showError(
           "Open Failed : File Access",
           "There was an error while trying to access or read the file. Please check the console for more information."
