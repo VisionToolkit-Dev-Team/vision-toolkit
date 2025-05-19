@@ -19,7 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "mobject-client": "^2.2.0",
-    "mobject-graph-ui": "^0.1.48",
+    "mobject-graph-ui": "^0.1.49",
     "mobject-graph-ui-iec-datatypes-pack": "^0.1.6",
     "mobject-graph-ui-vision-pack": "^0.1.12",
     "mobject-litegraph": "^0.1.11"
