@@ -30,8 +30,9 @@ git clone https://github.com/VisionToolkit-Dev-Team/vision-toolkit
 
 1. Check you have installed the following
 
-   - TwinCAT XAE 4024.62 (minimum)
-   - TwinCAT Vision 4.0.5.10 (minimum)
+   - TwinCAT XAE 4024.65
+   - TwinCAT Vision 4.0.5.10
+   - TwinCAT HMI 1.12.762.44
 
 2. Open, activate and run the TwinCAT project `\src\twincat\vision-toolkit.sln`.
 
