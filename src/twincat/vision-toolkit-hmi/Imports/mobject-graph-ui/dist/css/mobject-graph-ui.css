@@ -301,3 +301,67 @@ SOFTWARE.
 
 /*# sourceMappingURL=use-bootstrap-tag.css.map */
 
+/* CSS to style the <mark> elements with the class "search-match" */
+
+.search-results mark {
+  background-color: rgb(0, 255, 242) !important;
+  color: black !important;
+  padding: 0 0px !important;
+
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.search-results .card {
+  display: block;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.search-results .card:hover {
+  background-color: #40404015;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.search-results .card-text {
+  color: rgb(44, 44, 44);
+  font-size: 0.85rem;
+}
+
+.search-results .card-title {
+  font-weight: bold;
+}
+
+.example-card {
+  position: relative;
+}
+
+.ribbon-new {
+  width: 70px;
+  height: 70px;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.ribbon-new span {
+  position: absolute;
+  display: block;
+  width: 100px;
+  padding: 2px 0;
+  background-color: #e43535;
+  color: #ffffff;
+  font-weight: bold;
+  text-align: center;
+  font-size: 0.65rem;
+  transform: rotate(45deg);
+  top: 12px;
+  right: -30px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+}
+

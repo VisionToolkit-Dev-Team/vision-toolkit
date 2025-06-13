@@ -9,7 +9,10 @@
          const { IecDatatypesPack } = MobjectGraphUiIecDatatypesPack;
 
          const graphFramework = new GraphFramework();
-         graphFramework.install(new DefaultPack());
+         graphFramework.install(new DefaultPack(), {
+             ServerExamplesEditorExtension : true,
+             ServerExamplesEditorExtensionUrl: "https://vision-toolkit.mobject.org/example/list",
+         });
          graphFramework.install(new IecDatatypesPack());
          graphFramework.install(new VisionPack());
 
